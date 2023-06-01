@@ -1,7 +1,7 @@
 <template>
   <div class="container" v-if="client.id">
     <h1>{{ client.name }}</h1>
-    <div>chat with: admin</div>
+    <div>chat with: Admin</div>
     <div class="chatbox">
       <div v-for="message in messages" :key="message.id">
         <div :class="message.admin ? 'admin' : 'client'">
@@ -36,42 +36,39 @@ import { ref, onUnmounted } from 'vue';
 
 export default {
   props: {},
-  data: () => {
-    return {
-      messages: ref([]),
-      client: {
-        id: null,
-        name: '',
-        date: 0,
-        latestMessage: '',
-        seen: false,
-      },
-      hasUnreadMessage: false,
-    };
-  },
+  data: () => ({
+    messages: ref([]),
+    client: {
+      id: null,
+      name: '',
+      latestMessage: '',
+      seen: false,
+    },
+    hasUnreadMessage: false,
+  }),
   methods: {
-    login: function () {
+    login() {
       signInWithPopup(auth, new GoogleAuthProvider()).then(() => {
         this.requestNotificationPermission();
       });
     },
-    sendMessage: function () {
-      addDoc(collection(db, 'chats/' + this.client.id + '/messages'), {
+    sendMessage() {
+      addDoc(collection(db, `chats/${this.client.id}/messages`), {
         text: this.$refs.newMessage.value,
         date: Date.now(),
       });
 
-      let updateLatestMessage = {
+      const updateLatestMessage = {
         ...this.client,
         latestMessage: this.$refs.newMessage.value,
         seen: false,
         date: Date.now(),
       };
       delete updateLatestMessage.id;
-      setDoc(doc(db, 'chats/' + this.client.id), updateLatestMessage);
+      setDoc(doc(db, `chats/${this.client.id}`), updateLatestMessage);
       this.$refs.newMessage.value = '';
     },
-    requestNotificationPermission: function () {
+    requestNotificationPermission() {
       if ('Notification' in window && Notification.permission !== 'granted') {
         Notification.requestPermission().then((permission) => {
           if (permission === 'granted') {
@@ -80,38 +77,33 @@ export default {
         });
       }
     },
-    showNotification: function () {
-      if (
-        !document.hasFocus() &&
-        'Notification' in window &&
-        Notification.permission === 'granted'
-      ) {
+    showNotification() {
+      const { Notification } = window;
+      if (!document.hasFocus() && 'Notification' in window && Notification.permission === 'granted') {
         const notification = new Notification('New Message', {
           body: 'You have received a new message.',
           icon: '/cavulus-messaging-client/src/assets/notification.png',
         });
       }
     },
-    handleTabClick: function () {
+    handleTabClick() {
       this.hasUnreadMessage = false;
     },
   },
   mounted() {
-    const loginListener = auth.onAuthStateChanged((user) => {
+    auth.onAuthStateChanged((user) => {
       if (user != null) {
         this.client.id = user.uid;
         this.client.name = user.displayName;
         this.requestNotificationPermission();
 
         const messages = onSnapshot(
-          query(
-            collection(db, 'chats/' + this.client.id + '/messages'),
-            orderBy('date', 'desc')
-          ),
+          query(collection(db, `chats/${this.client.id}/messages`), orderBy('date', 'desc')),
           (snapshot) => {
-            this.messages = snapshot.docs.map((doc) => {
-              return { ...doc.data(), id: doc.id };
-            });
+            this.messages = snapshot.docs.map((doc) => ({
+              ...doc.data(),
+              id: doc.id,
+            }));
             if (!document.hasFocus()) {
               this.hasUnreadMessage = true;
             }
@@ -122,15 +114,13 @@ export default {
       }
     });
 
-    onUnmounted(loginListener);
-
     window.addEventListener('focus', this.handleTabClick);
   },
   beforeUnmount() {
     window.removeEventListener('focus', this.handleTabClick);
   },
   watch: {
-    hasUnreadMessage: function (newValue) {
+    hasUnreadMessage(newValue) {
       document.title = newValue ? '(1) New Message' : 'Chat App';
     },
   },
