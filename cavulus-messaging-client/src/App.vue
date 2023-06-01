@@ -2,8 +2,11 @@
   <div class="container" v-if="client.id">
     <h1>{{ client.name }}</h1>
     <div>chat with: Admin</div>
+    <div class="search-bar">
+      <input v-model="searchKeyword" type="text" placeholder="Search messages" />
+    </div>
     <div class="chatbox">
-      <div v-for="message in messages" :key="message.id">
+      <div v-for="message in filteredMessages" :key="message.id">
         <div :class="message.admin ? 'admin' : 'client'">
           {{ message.text }}
           <small class="message-date">{{ formatDate(message.date) }}</small>
@@ -21,6 +24,7 @@
   </div>
 </template>
 
+
 <script>
 import { db, auth } from './firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
@@ -34,7 +38,7 @@ import {
   orderBy,
   query,
 } from 'firebase/firestore';
-import { ref, onUnmounted } from 'vue';
+import { ref, onUnmounted, computed } from 'vue';
 
 export default {
   props: {},
@@ -47,7 +51,18 @@ export default {
       seen: false,
     },
     hasUnreadMessage: false,
+    searchKeyword: '',
   }),
+  computed: {
+    filteredMessages() {
+      if (!this.searchKeyword) {
+        return this.messages;
+      }
+
+      const keyword = this.searchKeyword.toLowerCase();
+      return this.messages.filter((message) => message.text.toLowerCase().includes(keyword));
+    },
+  },
   methods: {
     login() {
       signInWithPopup(auth, new GoogleAuthProvider()).then(() => {
@@ -229,6 +244,17 @@ export default {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.search-bar {
+  margin-bottom: 1rem;
+}
+
+.search-bar input[type="text"] {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
 }
 
 @media only screen and (max-width: 600px) {
