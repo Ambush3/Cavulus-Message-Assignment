@@ -10,6 +10,7 @@
             <small>{{ chat.name }}</small> <br />
             <strong>{{ chat.latestMessage }}</strong>
           </div>
+          <button @click="archiveChat(chat)">Archive</button>
         </div>
       </div>
 
@@ -41,7 +42,7 @@ import {
   orderBy,
   query,
 } from 'firebase/firestore';
-import { ref, onUnmounted } from 'vue';
+import { ref, onUnmounted, computed } from 'vue';
 
 import Chat from './components/Chat';
 
@@ -56,7 +57,18 @@ export default {
       openedChats: ref([]),
       loggedin: false,
       title: '',
+      searchKeyword: '',
     };
+  },
+  computed: {
+    filteredChats() {
+      const keyword = this.searchKeyword.toLowerCase();
+      return this.openedChats.filter(
+        (chat) =>
+          chat.name.toLowerCase().includes(keyword) ||
+          chat.latestMessage.toLowerCase().includes(keyword)
+      );
+    },
   },
   methods: {
     login() {
@@ -64,6 +76,21 @@ export default {
     },
     logout() {
       signOut(auth);
+    },
+    archiveChat(chat) {
+      // Update the chat document in the database to mark it as archived
+      const chatRef = doc(db, 'chats', chat.id);
+      deleteDoc(chatRef);
+    },
+    openChat(chat) {
+      if (!this.openedChats.includes(chat)) {
+        this.openedChats.push(chat);
+      }
+    },
+    highlightText(text) {
+      const keyword = this.searchKeyword.toLowerCase();
+      const regex = new RegExp(`(${keyword})`, 'gi');
+      return text.replace(regex, '<span class="highlight">$1</span>');
     },
   },
   mounted() {
@@ -95,6 +122,7 @@ export default {
   },
 };
 </script>
+
 
 <style>
 #app {
@@ -141,6 +169,10 @@ export default {
 .unseen {
   background-color: white;
   color: black;
+}
+
+.highlight {
+  background-color: red;
 }
 
 @media screen and (max-width: 768px) {
