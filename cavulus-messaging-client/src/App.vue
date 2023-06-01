@@ -1,19 +1,21 @@
 <template>
   <div class="container" v-if="client.id">
     <h1>{{ client.name }}</h1>
-    <div>chat with : admin</div>
+    <div>chat with: admin</div>
     <div class="chatbox">
-      <div v-for="message in messages">
+      <div v-for="message in messages" :key="message.id">
         <div :class="message.admin ? 'admin' : 'client'">
           {{ message.text }}
         </div>
       </div>
     </div>
-    <input type="text" @keypress.enter="sendMessage" ref="newMessage" placeholder="new message ..." />
-    <button @click="sendMessage" class="btn btn-primary">send</button>
+    <div class="message-box">
+      <input type="text" @keypress.enter="sendMessage" ref="newMessage" placeholder="New message..." />
+      <button @click="sendMessage" class="send-button">Send</button>
+    </div>
   </div>
   <div v-else>
-    <button @click="login">login</button>
+    <button @click="login">Login</button>
   </div>
 </template>
 
@@ -44,16 +46,18 @@ export default {
         latestMessage: '',
         seen: false,
       },
+      hasUnreadMessage: false,
     };
   },
   methods: {
     login: function () {
-      signInWithPopup(auth, new GoogleAuthProvider());
+      signInWithPopup(auth, new GoogleAuthProvider()).then(() => {
+        this.requestNotificationPermission();
+      });
     },
     sendMessage: function () {
       addDoc(collection(db, 'chats/' + this.client.id + '/messages'), {
         text: this.$refs.newMessage.value,
-
         date: Date.now(),
       });
 
@@ -67,12 +71,37 @@ export default {
       setDoc(doc(db, 'chats/' + this.client.id), updateLatestMessage);
       this.$refs.newMessage.value = '';
     },
+    requestNotificationPermission: function () {
+      if ('Notification' in window && Notification.permission !== 'granted') {
+        Notification.requestPermission().then((permission) => {
+          if (permission === 'granted') {
+            this.showNotification();
+          }
+        });
+      }
+    },
+    showNotification: function () {
+      if (
+        !document.hasFocus() &&
+        'Notification' in window &&
+        Notification.permission === 'granted'
+      ) {
+        const notification = new Notification('New Message', {
+          body: 'You have received a new message.',
+          icon: '/cavulus-messaging-client/src/assets/notification.png',
+        });
+      }
+    },
+    handleTabClick: function () {
+      this.hasUnreadMessage = false;
+    },
   },
   mounted() {
     const loginListener = auth.onAuthStateChanged((user) => {
       if (user != null) {
         this.client.id = user.uid;
         this.client.name = user.displayName;
+        this.requestNotificationPermission();
 
         const messages = onSnapshot(
           query(
@@ -83,6 +112,9 @@ export default {
             this.messages = snapshot.docs.map((doc) => {
               return { ...doc.data(), id: doc.id };
             });
+            if (!document.hasFocus()) {
+              this.hasUnreadMessage = true;
+            }
           }
         );
 
@@ -91,12 +123,21 @@ export default {
     });
 
     onUnmounted(loginListener);
+
+    window.addEventListener('focus', this.handleTabClick);
+  },
+  beforeUnmount() {
+    window.removeEventListener('focus', this.handleTabClick);
+  },
+  watch: {
+    hasUnreadMessage: function (newValue) {
+      document.title = newValue ? '(1) New Message' : 'Chat App';
+    },
   },
 };
 </script>
 
 <style>
-
 .container {
   display: flex;
   flex-direction: column;
@@ -133,5 +174,28 @@ export default {
 .admin {
   align-self: start;
   background-color: #fdff8f;
+}
+
+.message-box {
+  display: flex;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.message-box input[type="text"] {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 300px;
+}
+
+.message-box .send-button {
+  margin-left: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #0045c4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 </style>
