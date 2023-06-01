@@ -10,6 +10,7 @@
             <div v-for="message in filteredMessages" :key="message.id" class="message"
                 :class="{ admin: message.admin, client: !message.admin }">
                 {{ message.text }}
+                <small class="message-date">{{ formatDate(message.date) }}</small>
             </div>
         </div>
         <div class="input-container">
@@ -37,6 +38,7 @@ export default {
         };
     },
     computed: {
+        // search for words in messages
         filteredMessages() {
             if (!this.searchKeyword) {
                 return this.messages;
@@ -64,13 +66,20 @@ export default {
 
             this.newMessage = '';
         },
+        formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        },
     },
     mounted() {
+        // update seen status to true when admin opens chat window
         const updateSeen = { ...this.client, seen: true };
         delete updateSeen.id;
         setDoc(doc(db, 'chats/' + this.client.id), updateSeen);
         this.client.seen = true;
 
+        // get messages from firestore and update messages array 
         const messages = onSnapshot(
             query(collection(db, 'chats/' + this.client.id + '/messages'), orderBy('date', 'desc')),
             (snapshot) => {
@@ -113,6 +122,11 @@ export default {
     padding: 0.5rem;
     margin: 0.5rem;
     border-radius: 4px;
+}
+
+.message-date {
+  font-size: 0.75rem;
+  color: #888;
 }
 
 .client {

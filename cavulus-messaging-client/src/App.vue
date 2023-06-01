@@ -6,6 +6,7 @@
       <div v-for="message in messages" :key="message.id">
         <div :class="message.admin ? 'admin' : 'client'">
           {{ message.text }}
+          <small class="message-date">{{ formatDate(message.date) }}</small>
         </div>
       </div>
     </div>
@@ -13,9 +14,10 @@
       <input type="text" @keypress.enter="sendMessage" ref="newMessage" placeholder="New message..." />
       <button @click="sendMessage" class="send-button">Send</button>
     </div>
+    <button @click="logout" class="logout-button">Logout</button>
   </div>
   <div v-else>
-    <button @click="login">Login</button>
+    <button class="login-button" @click="login">Login</button>
   </div>
 </template>
 
@@ -89,6 +91,17 @@ export default {
     handleTabClick() {
       this.hasUnreadMessage = false;
     },
+    formatDate(timestamp) {
+      const date = new Date(timestamp);
+      const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+      return date.toLocaleDateString('en-US', options);
+    },
+    logout() {
+      auth.signOut();
+      this.client.id = null;
+      this.client.name = '';
+      this.messages = [];
+    },
   },
   mounted() {
     auth.onAuthStateChanged((user) => {
@@ -136,7 +149,7 @@ export default {
 }
 
 .chatbox {
-  height: 50vh;
+  height: 70vh;
   width: 30vw;
   overflow: scroll;
   flex-direction: column-reverse;
@@ -154,6 +167,11 @@ export default {
   padding: 0.5rem;
   margin: 0.5rem;
   border-radius: 4px;
+}
+
+.message-date {
+  font-size: 0.75rem;
+  color: #888;
 }
 
 .client {
@@ -187,5 +205,36 @@ export default {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.logout-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #ff0000;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.login-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #0045c4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+@media only screen and (max-width: 600px) {
+  .chatbox {
+    width: 90%;
+    margin-top: 2rem;
+  }
 }
 </style>

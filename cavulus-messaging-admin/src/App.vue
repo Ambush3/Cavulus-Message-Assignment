@@ -13,7 +13,7 @@
           <DropdownMenu @delete-chat="deleteChat(chat)" @archive-chat="archiveChat(chat)"></DropdownMenu>
         </div>
         <div class="chat-window">
-          <div v-for="chatId in openedChats">
+        <div v-for="chatId in openedChats" :key="chatId">
             <chat :client="chats.find(chat => chat.id === chatId)"></chat>
           </div>
         </div>
@@ -60,6 +60,7 @@ export default {
     };
   },
   computed: {
+    // used for filtering chats by keyword search
     filteredChats() {
       const keyword = this.searchKeyword.toLowerCase();
       return this.openedChats.filter(
@@ -70,20 +71,6 @@ export default {
     },
   },
   methods: {
-    login() {
-      signInWithPopup(auth, new GoogleAuthProvider());
-    },
-    logout() {
-      signOut(auth);
-    },
-    deleteChat(chat) {
-      const chatRef = doc(db, 'chats', chat.id);
-      deleteDoc(chatRef);
-    },
-    archiveChat(chat) {
-      const chatRef = doc(db, 'chats', chat.id);
-      setDoc(chatRef, { archived: true }, { merge: true });
-    },
     openChat(chat) {
       const index = this.openedChats.indexOf(chat.id);
       if (index !== -1) {
@@ -92,13 +79,24 @@ export default {
         this.openedChats.push(chat.id);
       }
     },
-    highlightText(text) {
-      const keyword = this.searchKeyword.toLowerCase();
-      const regex = new RegExp(`(${keyword})`, 'gi');
-      return text.replace(regex, '<span class="highlight">$1</span>');
+    // working on this feature
+    archiveChat(chat) {
+      const chatRef = doc(db, 'chats', chat.id);
+      setDoc(chatRef, { archived: true }, { merge: true });
+    },
+    deleteChat(chat) {
+      const chatRef = doc(db, 'chats', chat.id);
+      deleteDoc(chatRef);
+    },
+    login() {
+      signInWithPopup(auth, new GoogleAuthProvider());
+    },
+    logout() {
+      signOut(auth);
     },
   },
   mounted() {
+    // used for listening to login and logout events
     const loginListener = auth.onAuthStateChanged((user) => {
       if (user) {
         this.loggedin = true;
@@ -176,10 +174,6 @@ export default {
 .unseen {
   background-color: rgb(174, 172, 172);
   color: black;
-}
-
-.highlight {
-  background-color: red;
 }
 
 .logout {
