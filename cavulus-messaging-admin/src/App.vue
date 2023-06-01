@@ -1,21 +1,21 @@
 <template>
   <div class="container">
     <h1>{{ title }}</h1>
-    <button class="logout" @click="logout">Logout</button>
+    <button class="logout" @click="logout" v-if="loggedin">Logout</button>
     <div class="chat-list-container" v-if="loggedin">
       <div class="chat-list">
         <div v-for="chat in chats" class="p-2">
-          <div @click="openedChats.push(chat)" class="w-100 btn my-1"
+          <div @click="openChat(chat)" class="w-100 btn my-1"
             :class="[chat.seen ? 'btn-secondary' : 'btn-primary', chat.seen ? 'seen' : 'unseen']">
             <small>{{ chat.name }}</small> <br />
             <strong>{{ chat.latestMessage }}</strong>
           </div>
           <DropdownMenu @delete-chat="deleteChat(chat)" @archive-chat="archiveChat(chat)"></DropdownMenu>
         </div>
-      </div>
-      <div class="chat-window">
-        <div v-for="chat in openedChats">
-          <chat :client="chat"></chat>
+        <div class="chat-window">
+          <div v-for="chatId in openedChats">
+            <chat :client="chats.find(chat => chat.id === chatId)"></chat>
+          </div>
         </div>
       </div>
     </div>
@@ -56,6 +56,7 @@ export default {
       loggedin: false,
       title: '',
       searchKeyword: '',
+      openChatId: null
     };
   },
   computed: {
@@ -76,18 +77,19 @@ export default {
       signOut(auth);
     },
     deleteChat(chat) {
-      // Update the chat document in the database to delete it
       const chatRef = doc(db, 'chats', chat.id);
       deleteDoc(chatRef);
     },
     archiveChat(chat) {
-      // Update the chat document in the database to mark it as archived
       const chatRef = doc(db, 'chats', chat.id);
       setDoc(chatRef, { archived: true }, { merge: true });
     },
     openChat(chat) {
-      if (!this.openedChats.includes(chat)) {
-        this.openedChats.push(chat);
+      const index = this.openedChats.indexOf(chat.id);
+      if (index !== -1) {
+        this.openedChats.splice(index, 1);
+      } else {
+        this.openedChats.push(chat.id);
       }
     },
     highlightText(text) {
