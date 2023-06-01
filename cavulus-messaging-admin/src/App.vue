@@ -2,7 +2,7 @@
   <div class="container">
     <h1>{{ title }}</h1>
 
-    <div v-if="loggedin">
+    <div class="chat-list-container" v-if="loggedin">
       <div class="chat-list">
         <div v-for="chat in chats" class="p-2">
           <div @click="openedChats.push(chat)" class="w-100 btn my-1"
@@ -10,10 +10,9 @@
             <small>{{ chat.name }}</small> <br />
             <strong>{{ chat.latestMessage }}</strong>
           </div>
-          <button @click="archiveChat(chat)">Archive</button>
+          <DropdownMenu @delete-chat="deleteChat(chat)" @archive-chat="archiveChat(chat)"></DropdownMenu>
         </div>
       </div>
-
       <div class="chat-window">
         <div v-for="chat in openedChats">
           <chat :client="chat"></chat>
@@ -45,11 +44,13 @@ import {
 import { ref, onUnmounted, computed } from 'vue';
 
 import Chat from './components/Chat';
+import DropdownMenu from './components/DropdownMenu';
 
 export default {
   name: 'App',
   components: {
     Chat,
+    DropdownMenu
   },
   data() {
     return {
@@ -77,10 +78,15 @@ export default {
     logout() {
       signOut(auth);
     },
+    deleteChat(chat) {
+      // Update the chat document in the database to delete it
+      const chatRef = doc(db, 'chats', chat.id);
+      deleteDoc(chatRef);
+    },
     archiveChat(chat) {
       // Update the chat document in the database to mark it as archived
       const chatRef = doc(db, 'chats', chat.id);
-      deleteDoc(chatRef);
+      setDoc(chatRef, { archived: true }, { merge: true });
     },
     openChat(chat) {
       if (!this.openedChats.includes(chat)) {
@@ -131,7 +137,6 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  /* margin-top: 50px; */
 }
 
 .container {
@@ -139,11 +144,14 @@ export default {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  /* height: 100vh; */
+}
+
+.chat-list-container {
+  width: 33%;
 }
 
 .chat-list {
-  overflow-y: auto;
+  width: 100%;
 }
 
 .chat-window {
