@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <h1>{{ title }}</h1>
-
+    <button class="logout" @click="logout">Logout</button>
     <div class="chat-list-container" v-if="loggedin">
       <div class="chat-list">
         <div v-for="chat in chats" class="p-2">
@@ -18,10 +18,7 @@
           <chat :client="chat"></chat>
         </div>
       </div>
-
-      <button @click="logout">Logout</button>
     </div>
-
     <div v-else>
       <button @click="login">Login</button>
     </div>
@@ -181,6 +178,10 @@ export default {
 
 .highlight {
   background-color: red;
+}
+
+.logout {
+  color: red;
 }
 
 @media screen and (max-width: 768px) {
