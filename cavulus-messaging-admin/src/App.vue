@@ -184,12 +184,12 @@ export default {
 }
 
 @media screen and (max-width: 768px) {
-  .chat-list {
+  .chat-window {
     height: 50vh;
   }
 
-  .chat-window {
-    height: 50vh;
+  .chat-list-container {
+    width: 100%;
   }
 }
 </style>
