@@ -1,5 +1,5 @@
 <template>
-  <div v-if="client.id">
+  <div class="container" v-if="client.id">
     <h1>{{ client.name }}</h1>
     <div>chat with : admin</div>
     <div class="chatbox">
@@ -96,8 +96,17 @@ export default {
 </script>
 
 <style>
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 .chatbox {
   height: 50vh;
+  width: 30vw;
   overflow: scroll;
   flex-direction: column-reverse;
   background-color: #0045c4;
