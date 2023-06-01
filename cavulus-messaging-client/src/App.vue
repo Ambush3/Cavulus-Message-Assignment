@@ -263,4 +263,10 @@ export default {
     margin-top: 2rem;
   }
 }
+
+@media only screen and (min-width: 600px) and (max-width: 768px) {
+  .chatbox {
+    width: 60%;
+  }
+}
 </style>
