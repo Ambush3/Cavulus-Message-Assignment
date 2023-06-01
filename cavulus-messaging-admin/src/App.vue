@@ -167,7 +167,7 @@ export default {
 }
 
 .unseen {
-  background-color: white;
+  background-color: rgb(174, 172, 172);
   color: black;
 }
 
