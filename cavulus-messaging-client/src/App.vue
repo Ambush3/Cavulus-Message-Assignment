@@ -1,38 +1,11 @@
 <template>
   <div class="container">
     <div v-if="!loggedIn">
-      <h1>Login</h1>
-      <form @submit.prevent="login">
-        <div>
-          <label for="email">Email:</label>
-          <input v-model="loginData.email" type="email" id="email" />
-        </div>
-        <div>
-          <label for="password">Password:</label>
-          <input v-model="loginData.password" type="password" id="password" />
-        </div>
-        <button type="submit">Login</button>
-      </form>
+      <LoginForm @login-success="loginSuccess" />
       <br />
       <br />
-      <h1>Register</h1>
-      <form @submit.prevent="register">
-        <div>
-          <label for="name">Name:</label>
-          <input v-model="registration.name" type="text" id="name" />
-        </div>
-        <div>
-          <label for="email">Email:</label>
-          <input v-model="registration.email" type="email" id="email" />
-        </div>
-        <div>
-          <label for="password">Password:</label>
-          <input v-model="registration.password" type="password" id="password" />
-        </div>
-        <button type="submit">Register</button>
-      </form>
+      <RegistrationForm :auth="auth" @register-success="handleRegisterSuccess" />
     </div>
-
     <div v-else>
       <div class="client-section" v-if="isClient && client.name">
         <h1>{{ client.name }}</h1>
@@ -89,8 +62,14 @@ import {
   query,
 } from 'firebase/firestore';
 import { ref, onUnmounted, computed } from 'vue';
+import LoginForm from './components/LoginForm.vue';
+import RegistrationForm from './components/RegistrationForm.vue';
 
 export default {
+  components: {
+    LoginForm,
+    RegistrationForm,
+  },
   data() {
     return {
       registration: {
@@ -113,6 +92,9 @@ export default {
       },
       hasUnreadMessage: false,
       searchKeyword: '',
+      loginSuccess: false,
+      registerSuccess: false,
+      auth: {},
     };
   },
   computed: {
@@ -126,50 +108,9 @@ export default {
     },
   },
   methods: {
-    register() {
-      const { email, password, name } = this.registration;
-      createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-          const user = userCredential.user;
-
-          // Assign the name from registration to the client object
-          this.client.name = name;
-          console.log('this is the client name', this.client.name);
-
-          // Set the display name for the user
-          updateProfile(user, {
-            displayName: name,
-          })
-            .then(() => {
-              localStorage.setItem('clientName', name);
-
-              this.loggedIn = true;
-              this.isClient = true;
-              this.client.id = user.uid;
-              this.requestNotificationPermission();
-              const messages = onSnapshot(
-                query(collection(db, `chats/${this.client.id}/messages`), orderBy('date', 'desc')),
-                (snapshot) => {
-                  this.messages = snapshot.docs.map((doc) => ({
-                    ...doc.data(),
-                    id: doc.id,
-                  }));
-                  if (!document.hasFocus()) {
-                    this.hasUnreadMessage = true;
-                  }
-                }
-              );
-              onUnmounted(messages);
-            })
-            .catch((error) => {
-              console.log(error);
-            });
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+    handleRegisterSuccess() {
+      this.registerSuccess = true;
     },
-
     login() {
       const { email, password } = this.loginData;
       signInWithEmailAndPassword(auth, email, password)
@@ -328,7 +269,7 @@ export default {
   padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;
-  width: 53.5vh;
+  width: 45vh;
 }
 
 .message-box .send-button {
@@ -387,7 +328,7 @@ export default {
   padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;
-  width: 300px;
+  width: 100%;
   margin-bottom: 1rem;
 }
 
