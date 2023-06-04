@@ -13,7 +13,7 @@
           <DropdownMenu @delete-chat="deleteChat(chat)" @archive-chat="archiveChat(chat)"></DropdownMenu>
         </div>
         <div class="chat-window">
-        <div v-for="chatId in openedChats" :key="chatId">
+          <div v-for="chatId in openedChats" :key="chatId">
             <chat :client="chats.find(chat => chat.id === chatId)"></chat>
           </div>
         </div>
@@ -96,7 +96,6 @@ export default {
     },
   },
   mounted() {
-    // used for listening to login and logout events
     const loginListener = auth.onAuthStateChanged((user) => {
       if (user) {
         this.loggedin = true;

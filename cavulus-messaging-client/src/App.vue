@@ -1,33 +1,83 @@
 <template>
-  <div class="container" v-if="client.id">
-    <h1>{{ client.name }}</h1>
-    <div>chat with: Admin</div>
-    <div class="search-bar">
-      <input v-model="searchKeyword" type="text" placeholder="Search messages" />
-    </div>
-    <div class="chatbox">
-      <div v-for="message in filteredMessages" :key="message.id">
-        <div :class="message.admin ? 'admin' : 'client'">
-          {{ message.text }}
-          <small class="message-date">{{ formatDate(message.date) }}</small>
+  <div class="container">
+    <div v-if="!loggedIn">
+      <h1>Login</h1>
+      <form @submit.prevent="login">
+        <div>
+          <label for="email">Email:</label>
+          <input v-model="loginData.email" type="email" id="email" />
         </div>
+        <div>
+          <label for="password">Password:</label>
+          <input v-model="loginData.password" type="password" id="password" />
+        </div>
+        <button type="submit">Login</button>
+      </form>
+      <br />
+      <br />
+      <h1>Register</h1>
+      <form @submit.prevent="register">
+        <div>
+          <label for="name">Name:</label>
+          <input v-model="registration.name" type="text" id="name" />
+        </div>
+        <div>
+          <label for="email">Email:</label>
+          <input v-model="registration.email" type="email" id="email" />
+        </div>
+        <div>
+          <label for="password">Password:</label>
+          <input v-model="registration.password" type="password" id="password" />
+        </div>
+        <button type="submit">Register</button>
+      </form>
+    </div>
+
+    <div v-else>
+      <div class="client-section" v-if="isClient && client.name">
+        <h1>{{ client.name }}</h1>
+        <div>Chat with: Admin</div>
+        <div class="search-bar">
+          <input v-model="searchKeyword" type="text" placeholder="Search messages" />
+        </div>
+        <div class="chatbox">
+          <div v-for="message in filteredMessages" :key="message.id">
+            <div :class="message.admin ? 'admin' : 'client'">
+              {{ message.text }}
+              <small class="message-date">{{ formatDate(message.date) }}</small>
+            </div>
+          </div>
+        </div>
+        <div class="message-box">
+          <input type="text" @keypress.enter="sendMessage" ref="newMessage" placeholder="New message..." />
+          <button @click="sendMessage" class="send-button">Send</button>
+        </div>
+        <button @click="logout" class="logout-button">Logout</button>
+      </div>
+
+      <div class="admin-section" v-else>
+        <h1>Admin Chat</h1>
+        <div class="chatbox">
+          <div v-for="message in filteredMessages" :key="message.id">
+            <div :class="message.admin ? 'admin' : 'client'">
+              {{ message.text }}
+              <small class="message-date">{{ formatDate(message.date) }}</small>
+            </div>
+          </div>
+        </div>
+        <div class="message-box">
+          <input type="text" @keypress.enter="sendMessage" ref="newMessage" placeholder="New message..." />
+          <button @click="sendMessage" class="send-button">Send</button>
+        </div>
+        <button @click="logout" class="logout-button">Logout</button>
       </div>
     </div>
-    <div class="message-box">
-      <input type="text" @keypress.enter="sendMessage" ref="newMessage" placeholder="New message..." />
-      <button @click="sendMessage" class="send-button">Send</button>
-    </div>
-    <button @click="logout" class="logout-button">Logout</button>
-  </div>
-  <div v-else>
-    <button class="login-button" @click="login">Login</button>
   </div>
 </template>
 
-
 <script>
 import { db, auth } from './firebase';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import {
   onSnapshot,
   collection,
@@ -41,18 +91,30 @@ import {
 import { ref, onUnmounted, computed } from 'vue';
 
 export default {
-  props: {},
-  data: () => ({
-    messages: ref([]),
-    client: {
-      id: null,
-      name: '',
-      latestMessage: '',
-      seen: false,
-    },
-    hasUnreadMessage: false,
-    searchKeyword: '',
-  }),
+  data() {
+    return {
+      registration: {
+        name: '',
+        email: '',
+        password: '',
+      },
+      loginData: {
+        email: '',
+        password: '',
+      },
+      loggedIn: false,
+      isClient: false,
+      messages: ref([]),
+      client: {
+        id: null,
+        name: '',
+        latestMessage: '',
+        seen: false,
+      },
+      hasUnreadMessage: false,
+      searchKeyword: '',
+    };
+  },
   computed: {
     filteredMessages() {
       if (!this.searchKeyword) {
@@ -64,15 +126,56 @@ export default {
     },
   },
   methods: {
+    register() {
+      const { email, password, name } = this.registration;
+      createUserWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+
+          // Assign the name from registration to the client object
+          this.client.name = name;
+
+          user.updateProfile({
+            displayName: name,
+          });
+          this.loggedIn = true;
+          this.isClient = true;
+          this.client.id = user.uid;
+          this.requestNotificationPermission();
+          const messages = onSnapshot(
+            query(collection(db, `chats/${this.client.id}/messages`), orderBy('date', 'desc')),
+            (snapshot) => {
+              this.messages = snapshot.docs.map((doc) => ({
+                ...doc.data(),
+                id: doc.id,
+              }));
+              if (!document.hasFocus()) {
+                this.hasUnreadMessage = true;
+              }
+            }
+          );
+          onUnmounted(messages);
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+    },
+
     login() {
-      signInWithPopup(auth, new GoogleAuthProvider()).then(() => {
-        this.requestNotificationPermission();
-      });
+      const { email, password } = this.loginData;
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          this.requestNotificationPermission();
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     },
     sendMessage() {
       addDoc(collection(db, `chats/${this.client.id}/messages`), {
         text: this.$refs.newMessage.value,
         date: Date.now(),
+        admin: !this.isClient,
       });
 
       const updateLatestMessage = {
@@ -113,6 +216,8 @@ export default {
     },
     logout() {
       auth.signOut();
+      this.loggedIn = false;
+      this.isClient = false;
       this.client.id = null;
       this.client.name = '';
       this.messages = [];
@@ -121,8 +226,10 @@ export default {
   mounted() {
     auth.onAuthStateChanged((user) => {
       if (user != null) {
+        this.loggedIn = true;
+        this.isClient = true;
         this.client.id = user.uid;
-        this.client.name = user.displayName;
+        this.client.name = user.displayName; // Assign the user's displayName to the client object
         this.requestNotificationPermission();
 
         const messages = onSnapshot(
@@ -141,8 +248,6 @@ export default {
         onUnmounted(messages);
       }
     });
-
-    window.addEventListener('focus', this.handleTabClick);
   },
   beforeUnmount() {
     window.removeEventListener('focus', this.handleTabClick);
@@ -154,6 +259,7 @@ export default {
   },
 };
 </script>
+
 
 <style>
 .container {
@@ -209,7 +315,7 @@ export default {
   padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;
-  width: 300px;
+  width: 53.5vh;
 }
 
 .message-box .send-button {
@@ -235,9 +341,6 @@ export default {
 }
 
 .login-button {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
   padding: 0.5rem 1rem;
   background-color: #0045c4;
   color: white;
@@ -246,7 +349,24 @@ export default {
   cursor: pointer;
 }
 
-.search-bar {
+.login-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-form input[type="text"],
+.login-form input[type="password"] {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 300px;
+}
+
+.admin-section h1,
+.client-section h1 {
+  text-align: center;
   margin-bottom: 1rem;
 }
 
@@ -254,19 +374,40 @@ export default {
   padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 4px;
-  width: 100%;
+  width: 300px;
+  margin-bottom: 1rem;
 }
 
-@media only screen and (max-width: 600px) {
+@media only screen and (max-width: 768px) {
   .chatbox {
-    width: 90%;
-    margin-top: 2rem;
+    height: 70vh;
+    width: 70vw;
+  }
+
+  .message-box input[type="text"] {
+    width: 52vw;
+  }
+
+  .search-bar input[type="text"] {
+    width: 53.5vw;
   }
 }
 
-@media only screen and (min-width: 600px) and (max-width: 768px) {
+/* ipad */
+@media only screen and (min-width: 768px) and (max-width: 1024px) {
   .chatbox {
-    width: 60%;
+    height: 70vh;
+    width: 50vw;
+  }
+
+  .message-box input[type="text"] {
+    width: 41vw;
+  }
+
+  .search-bar input[type="text"] {
+    width: 53.5vw;
   }
 }
+
+
 </style>
