@@ -77,7 +77,7 @@
 
 <script>
 import { db, auth } from './firebase';
-import { GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import {
   onSnapshot,
   collection,
@@ -134,27 +134,36 @@ export default {
 
           // Assign the name from registration to the client object
           this.client.name = name;
+          console.log('this is the client name', this.client.name);
 
-          user.updateProfile({
+          // Set the display name for the user
+          updateProfile(user, {
             displayName: name,
-          });
-          this.loggedIn = true;
-          this.isClient = true;
-          this.client.id = user.uid;
-          this.requestNotificationPermission();
-          const messages = onSnapshot(
-            query(collection(db, `chats/${this.client.id}/messages`), orderBy('date', 'desc')),
-            (snapshot) => {
-              this.messages = snapshot.docs.map((doc) => ({
-                ...doc.data(),
-                id: doc.id,
-              }));
-              if (!document.hasFocus()) {
-                this.hasUnreadMessage = true;
-              }
-            }
-          );
-          onUnmounted(messages);
+          })
+            .then(() => {
+              localStorage.setItem('clientName', name);
+
+              this.loggedIn = true;
+              this.isClient = true;
+              this.client.id = user.uid;
+              this.requestNotificationPermission();
+              const messages = onSnapshot(
+                query(collection(db, `chats/${this.client.id}/messages`), orderBy('date', 'desc')),
+                (snapshot) => {
+                  this.messages = snapshot.docs.map((doc) => ({
+                    ...doc.data(),
+                    id: doc.id,
+                  }));
+                  if (!document.hasFocus()) {
+                    this.hasUnreadMessage = true;
+                  }
+                }
+              );
+              onUnmounted(messages);
+            })
+            .catch((error) => {
+              console.log(error);
+            });
         })
         .catch((error) => {
           console.log(error);
@@ -219,9 +228,9 @@ export default {
       this.loggedIn = false;
       this.isClient = false;
       this.client.id = null;
-      this.client.name = '';
       this.messages = [];
     },
+
   },
   mounted() {
     auth.onAuthStateChanged((user) => {
@@ -246,9 +255,13 @@ export default {
         );
 
         onUnmounted(messages);
+      } else {
+        // User is not logged in, retrieve the client name from localStorage
+        this.client.name = localStorage.getItem('clientName');
       }
     });
   },
+
   beforeUnmount() {
     window.removeEventListener('focus', this.handleTabClick);
   },
