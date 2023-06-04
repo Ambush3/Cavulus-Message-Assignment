@@ -200,6 +200,8 @@ export default {
         // User is not logged in, retrieve the client name from localStorage
         this.client.name = localStorage.getItem('clientName');
       }
+
+      window.addEventListener('focus', this.handleTabClick);
     });
   },
 
