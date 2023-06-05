@@ -371,11 +371,11 @@ export default {
 @media only screen and (max-width: 768px) {
   .chatbox {
     height: 70vh;
-    width: 70vw;
+    width: 80vw;
   }
 
   .message-box input[type="text"] {
-    width: 52vw;
+    width: 60vw;
   }
 }
 

@@ -175,7 +175,7 @@ export default {
 }
 
 .chat-list-container {
-  width: 33%;
+  width: 50%;
 }
 
 .chat-list {
@@ -220,7 +220,7 @@ export default {
 }
 
 .chat-window {
-  margin-top: 20px;
+  margin-bottom: 4em;
   overflow-y: auto;
 }
 
