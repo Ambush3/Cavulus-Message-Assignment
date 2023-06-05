@@ -34,18 +34,16 @@ export default {
             required: true,
         },
     },
-    data() {
-        return {
-            registration: {
-                name: '',
-                email: '',
-                password: '',
-            },
+    setup() {
+        const registration = {
+            name: '',
+            email: '',
+            password: '',
         };
-    },
-    methods: {
-        register() {
-            const { email, password, name } = this.registration;
+
+        const register = function () {
+            const { email, password, name } = registration;
+
             createUserWithEmailAndPassword(auth, email, password)
                 .then((userCredential) => {
                     const user = userCredential.user;
@@ -56,13 +54,18 @@ export default {
                                 seen: false,
                                 createdAt: serverTimestamp(),
                             };
-                            addDoc(collection(db, 'documents'), data)
-                                .then(() => {
-                                    this.$emit('register-success');
+                            addDoc(collection(db, 'chats'), data)
+                                .then((docRef) => {
+                                    store.commit('setUser', {
+                                        id: user.uid,
+                                        name,
+                                        chatId: docRef.id,
+                                    });
                                 })
                                 .catch((error) => {
                                     console.log(error);
                                 });
+
                         })
                         .catch((error) => {
                             console.log(error);
@@ -71,7 +74,14 @@ export default {
                 .catch((error) => {
                     console.log(error);
                 });
-        },
+        };
+        // ...
+
+
+        return {
+            registration,
+            register,
+        };
     },
 };
 </script>

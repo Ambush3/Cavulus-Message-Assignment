@@ -7,15 +7,14 @@
         <button @click="showRegisterForm = true">Register</button>
       </div>
       <div v-else>
-        <RegistrationForm :auth="auth" @register-success="handleRegisterSuccess" />
+        <RegistrationForm :auth="auth" :register-success="registerSuccess" @register-success="handleRegisterSuccess" />
         <br /><br />
         <button @click="showRegisterForm = false">Login</button>
       </div>
     </div>
     <div v-else>
       <div class="client-section" v-if="isClient && client.name">
-        <h1>Hello {{ client.name }}</h1>
-        <!-- <div>Chat with: Hello {{ client.name }}</div> -->
+        <h1>Hello {{ clientName }}</h1>
         <div class="search-bar">
           <input v-model="searchKeyword" type="text" placeholder="Search messages" />
         </div>
@@ -34,7 +33,6 @@
         <button @click="logout" class="logout-button">Logout</button>
       </div>
       <div class="admin-section" v-else>
-        <!-- <h1>Chat With Admin</h1> -->
         <div class="chatbox">
           <div v-for="message in filteredMessages" :key="message.id">
             <div :class="message.admin ? 'admin' : 'client'">
@@ -59,7 +57,6 @@ import { db, auth } from './firebase';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  updateProfile,
 } from 'firebase/auth';
 import {
   onSnapshot,
@@ -74,6 +71,9 @@ import {
 import { ref, onUnmounted, computed } from 'vue';
 import LoginForm from './components/LoginForm.vue';
 import RegistrationForm from './components/RegistrationForm.vue';
+import { watch } from 'vue';
+import { useStore } from 'vuex';
+const store = useStore();
 
 export default {
   components: {
@@ -106,6 +106,7 @@ export default {
       registerSuccess: false,
       showRegisterForm: false,
       auth: {},
+      clientName: ref(''),
     };
   },
   computed: {
@@ -196,12 +197,15 @@ export default {
     },
   },
   mounted() {
+    // const store = useStore();
+    // this.clientName = store.state.user.name;
     auth.onAuthStateChanged((user) => {
       if (user != null) {
         this.loggedIn = true;
         this.isClient = true;
         this.client.id = user.uid;
         this.client.name = user.displayName;
+        this.clientName = user.displayName;
         this.requestNotificationPermission();
 
         const messages = onSnapshot(
@@ -221,13 +225,16 @@ export default {
         );
 
         onUnmounted(messages);
-      } else {
-        this.client.name = localStorage.getItem('clientName');
       }
-
-      window.addEventListener('focus', this.handleTabClick);
     });
+
+    watch(() => this.client.name, (newValue) => {
+      this.clientName = newValue;
+    });
+
+    window.addEventListener('focus', this.handleTabClick);
   },
+
   beforeUnmount() {
     window.removeEventListener('focus', this.handleTabClick);
   },
@@ -235,6 +242,11 @@ export default {
     hasUnreadMessage(newValue) {
       document.title = newValue ? 'New Message' : 'Cavulus Client';
     },
+    registerSuccess(newValue) {
+      if (newValue) {
+        window.location.reload();
+      };
+    }
   },
 };
 </script>
