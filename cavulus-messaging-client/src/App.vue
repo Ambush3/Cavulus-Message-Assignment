@@ -1,12 +1,18 @@
 <template>
   <div class="container">
     <div v-if="!loggedIn">
-      <LoginForm @login-success="loginSuccess" />
-      <br />
-      <br />
-      <RegistrationForm :auth="auth" @register-success="handleRegisterSuccess" />
+      <div v-if="!showRegisterForm">
+        <LoginForm @login-success="loginSuccess" />
+        <br /><br />
+        <button @click="showRegisterForm = true">Register</button>
+      </div>
+      <div v-else>
+        <RegistrationForm :auth="auth" @register-success="handleRegisterSuccess" />
+        <br /><br />
+        <button @click="showRegisterForm = false">Login</button>
+      </div>
     </div>
-    <div v-else>
+      <div v-else>
       <div class="client-section" v-if="isClient && client.name">
         <h1>{{ client.name }}</h1>
         <div>Chat with: Admin</div>
@@ -27,7 +33,6 @@
         </div>
         <button @click="logout" class="logout-button">Logout</button>
       </div>
-
       <div class="admin-section" v-else>
         <h1>Admin Chat</h1>
         <div class="chatbox">
@@ -50,7 +55,11 @@
 
 <script>
 import { db, auth } from './firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+} from 'firebase/auth';
 import {
   onSnapshot,
   collection,
@@ -94,6 +103,7 @@ export default {
       searchKeyword: '',
       loginSuccess: false,
       registerSuccess: false,
+      showRegisterForm: false,
       auth: {},
     };
   },
@@ -104,7 +114,9 @@ export default {
       }
 
       const keyword = this.searchKeyword.toLowerCase();
-      return this.messages.filter((message) => message.text.toLowerCase().includes(keyword));
+      return this.messages.filter((message) =>
+        message.text.toLowerCase().includes(keyword)
+      );
     },
   },
   methods: {
@@ -149,7 +161,11 @@ export default {
     },
     showNotification() {
       const { Notification } = window;
-      if (!document.hasFocus() && 'Notification' in window && Notification.permission === 'granted') {
+      if (
+        !document.hasFocus() &&
+        'Notification' in window &&
+        Notification.permission === 'granted'
+      ) {
         const notification = new Notification('New Message', {
           body: 'You have received a new message.',
           icon: '/cavulus-messaging-client/src/assets/notification.png',
@@ -161,7 +177,13 @@ export default {
     },
     formatDate(timestamp) {
       const date = new Date(timestamp);
-      const options = { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: 'numeric' };
+      const options = {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+      };
       return date.toLocaleDateString('en-US', options);
     },
     logout() {
@@ -171,7 +193,6 @@ export default {
       this.client.id = null;
       this.messages = [];
     },
-
   },
   mounted() {
     auth.onAuthStateChanged((user) => {
@@ -179,11 +200,14 @@ export default {
         this.loggedIn = true;
         this.isClient = true;
         this.client.id = user.uid;
-        this.client.name = user.displayName; // Assign the user's displayName to the client object
+        this.client.name = user.displayName;
         this.requestNotificationPermission();
 
         const messages = onSnapshot(
-          query(collection(db, `chats/${this.client.id}/messages`), orderBy('date', 'desc')),
+          query(
+            collection(db, `chats/${this.client.id}/messages`),
+            orderBy('date', 'desc')
+          ),
           (snapshot) => {
             this.messages = snapshot.docs.map((doc) => ({
               ...doc.data(),
@@ -197,25 +221,22 @@ export default {
 
         onUnmounted(messages);
       } else {
-        // User is not logged in, retrieve the client name from localStorage
         this.client.name = localStorage.getItem('clientName');
       }
 
       window.addEventListener('focus', this.handleTabClick);
     });
   },
-
   beforeUnmount() {
     window.removeEventListener('focus', this.handleTabClick);
   },
   watch: {
     hasUnreadMessage(newValue) {
-      document.title = newValue ? '(1) New Message' : 'Chat App';
+      document.title = newValue ? 'New Message' : 'Chat App';
     },
   },
 };
 </script>
-
 
 <style>
 .container {
@@ -349,7 +370,6 @@ export default {
   }
 }
 
-/* ipad */
 @media only screen and (min-width: 768px) and (max-width: 1024px) {
   .chatbox {
     height: 70vh;
@@ -364,6 +384,4 @@ export default {
     width: 53.5vw;
   }
 }
-
-
 </style>
