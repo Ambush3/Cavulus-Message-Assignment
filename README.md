@@ -6,8 +6,6 @@ The app consists of a Client Side, and an Admin Side.
 Through the client side you can register/login. Afterwards a chat window will appear, where you can then message the admin. 
 Which currently is set for testing purposes and anyone can login to go back and forth and chat between themselves.
 
-You can search through messages, and delete the message from the admin side currently. 
-
 
 # Some of the features: 
 1. User Authentication: The application allows only the administrative account to be able to access the conversation. 
