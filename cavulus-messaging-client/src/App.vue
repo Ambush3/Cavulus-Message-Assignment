@@ -12,10 +12,10 @@
         <button @click="showRegisterForm = false">Login</button>
       </div>
     </div>
-      <div v-else>
+    <div v-else>
       <div class="client-section" v-if="isClient && client.name">
-        <h1>{{ client.name }}</h1>
-        <div>Chat with: Admin</div>
+        <h1>Hello {{ client.name }}</h1>
+        <!-- <div>Chat with: Hello {{ client.name }}</div> -->
         <div class="search-bar">
           <input v-model="searchKeyword" type="text" placeholder="Search messages" />
         </div>
@@ -34,7 +34,7 @@
         <button @click="logout" class="logout-button">Logout</button>
       </div>
       <div class="admin-section" v-else>
-        <h1>Admin Chat</h1>
+        <!-- <h1>Chat With Admin</h1> -->
         <div class="chatbox">
           <div v-for="message in filteredMessages" :key="message.id">
             <div :class="message.admin ? 'admin' : 'client'">
@@ -52,6 +52,7 @@
     </div>
   </div>
 </template>
+
 
 <script>
 import { db, auth } from './firebase';
@@ -232,7 +233,7 @@ export default {
   },
   watch: {
     hasUnreadMessage(newValue) {
-      document.title = newValue ? 'New Message' : 'Chat App';
+      document.title = newValue ? 'New Message' : 'Cavulus Client';
     },
   },
 };
@@ -363,10 +364,6 @@ export default {
 
   .message-box input[type="text"] {
     width: 52vw;
-  }
-
-  .search-bar input[type="text"] {
-    width: 53.5vw;
   }
 }
 

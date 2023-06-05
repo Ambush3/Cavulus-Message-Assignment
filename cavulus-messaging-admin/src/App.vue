@@ -124,7 +124,7 @@ export default {
     const loginListener = auth.onAuthStateChanged((user) => {
       if (user) {
         this.loggedin = true;
-        this.title = 'Welcome Admin';
+        this.title = 'Hello Admin';
         const chatSnapshot = onSnapshot(
           query(collection(db, 'chats'), orderBy('date', 'desc')),
           (snapshot) => {

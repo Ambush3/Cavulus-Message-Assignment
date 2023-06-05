@@ -40,7 +40,6 @@ export default {
 };
 </script>
 
-
 <style>
 .login-form {
     display: flex;

@@ -21,9 +21,12 @@
 
 <script>
 import { createUserWithEmailAndPassword, updateProfile, getAuth } from 'firebase/auth';
-import { ref } from 'vue';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 
 const auth = getAuth();
+const db = getFirestore();
+
 export default {
     props: {
         auth: {
@@ -48,7 +51,18 @@ export default {
                     const user = userCredential.user;
                     updateProfile(user, { displayName: name })
                         .then(() => {
-                            this.$emit('register-success');
+                            const data = {
+                                name,
+                                seen: false,
+                                createdAt: serverTimestamp(),
+                            };
+                            addDoc(collection(db, 'documents'), data)
+                                .then(() => {
+                                    this.$emit('register-success');
+                                })
+                                .catch((error) => {
+                                    console.log(error);
+                                });
                         })
                         .catch((error) => {
                             console.log(error);
@@ -58,7 +72,6 @@ export default {
                     console.log(error);
                 });
         },
-
     },
 };
 </script>
