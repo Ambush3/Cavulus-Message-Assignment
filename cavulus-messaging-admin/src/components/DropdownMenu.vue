@@ -1,5 +1,5 @@
 <template>
-    <div class="dropdown">
+    <div class="dropdown" ref="dropdown">
         <div class="dropdown-toggle" @click="toggleDropdown">
             <i class="fas fa-ellipsis-h"></i>
         </div>
@@ -17,9 +17,23 @@ export default {
             showDropdown: false,
         };
     },
+    mounted() {
+        document.addEventListener("click", this.handleClickOutside);
+    },
+    destroyed() {
+        document.removeEventListener("click", this.handleClickOutside);
+    },
     methods: {
         toggleDropdown() {
             this.showDropdown = !this.showDropdown;
+        },
+        handleClickOutside(event) {
+            if (
+                this.showDropdown &&
+                !this.$refs.dropdown.contains(event.target)
+            ) {
+                this.showDropdown = false;
+            }
         },
     },
 };
@@ -33,7 +47,7 @@ export default {
 
 .dropdown-menu {
     position: absolute;
-    right: 0;
+    right: 10;
     z-index: 100;
     display: none;
 }
@@ -46,4 +60,3 @@ export default {
     cursor: pointer;
 }
 </style>
-
