@@ -9,11 +9,10 @@ Which currently is set for testing purposes and anyone can login to go back and 
 
 # Some of the features: 
 1. User Authentication: The application allows only the administrative account to be able to access the conversation. 
-2. One-on-One Messaging: Users can send private messages to other individual users. These messages are displayed in a threaded conversation format, sorted by date and time. 
-3. Notifications: Notifications that work on client and admin side. When a client receives a new message the conversation bubble for that chat (person) turns grey, indicating that it is unread. On the Admin side, I created a notification that pops up in the browser tab, stating that they now have a new message. 
-4. Search/Filter Messages: You can filter and search in the conversation texts for certain words in both admin and client chat 
-5. Archive/Delete: You are able to delete conversations on the admin side. Firebase doesn’t have a way to archive however. Something I plan on working on in the future. 
-6. Compatible with all devices
+2. One-on-One Messaging: Users can send private messages to an admin. These messages are displayed in a threaded conversation format, sorted by date and time. 
+3. Search/Filter Messages: You can filter and search in the conversation texts for certain words in both admin and client chat 
+4. Archive/Delete: You are able to delete conversations on the admin side. Firebase doesn’t have a way to archive however. Something I plan on working on in the future. 
+5. Compatible with all devices
 
 # Future enhancements: 
 1. Better/more UI enhancements. 
