@@ -387,7 +387,7 @@ export default {
   }
 
   .search-bar input[type="text"] {
-    //width: 53.5vw;
+    width: 53.5vw;
   }
 }
 </style>
