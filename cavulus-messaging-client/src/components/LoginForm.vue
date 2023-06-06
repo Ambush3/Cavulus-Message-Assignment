@@ -43,45 +43,47 @@ export default {
 };
 </script>
 
+
 <style scoped>
 .form-container {
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #f2f2f2;
-    border-radius: 5px;
+  margin: 0 auto;
+  max-width: 600px;
+  padding: 20px;
+  border-radius: 5px;
+  position: absolute;
+  top: 50px;
+  left: 0;
+  right: 0;
 }
 
 h1 {
-    text-align: center;
-    margin-bottom: 20px;
+  text-align: center;
+  margin-bottom: 20px;
 }
 
 .form {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 
 .form-group {
-    margin-bottom: 15px;
-}
-
-label {
-    font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
 }
 
 .input-field {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 .submit-button {
-    padding: 10px;
-    background-color: #0045c4;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+  padding: 10px;
+  background-color: #0045c4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 </style>

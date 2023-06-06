@@ -164,6 +164,14 @@ export default {
   margin-bottom: 10px;
 }
 
+.login-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 250px;
+  margin: 0 auto;
+}
+
 .logout {
   margin-top: 10px;
   background-color: #f44336;

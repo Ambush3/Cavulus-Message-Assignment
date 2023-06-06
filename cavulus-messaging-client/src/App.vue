@@ -4,12 +4,12 @@
       <div v-if="!showRegisterForm">
         <LoginForm @login-success="loginSuccess" />
         <br /><br />
-        <button @click="showRegisterForm = true">Register</button>
+        <button @click="showRegisterForm = true">Need to Register?</button>
       </div>
       <div v-else>
         <RegistrationForm :auth="auth" :register-success="registerSuccess" @register-success="handleRegisterSuccess" />
         <br /><br />
-        <button @click="showRegisterForm = false">Login</button>
+        <button class="login-button" @click="showRegisterForm = false">Login</button>
       </div>
     </div>
     <div v-else>
@@ -55,20 +55,18 @@
 <script>
 import { db, auth } from './firebase';
 import {
-  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from 'firebase/auth';
 import {
   onSnapshot,
   collection,
   doc,
-  deleteDoc,
   setDoc,
   addDoc,
   orderBy,
   query,
 } from 'firebase/firestore';
-import { ref, onUnmounted, computed } from 'vue';
+import { ref, onUnmounted } from 'vue';
 import LoginForm from './components/LoginForm.vue';
 import RegistrationForm from './components/RegistrationForm.vue';
 import { watch } from 'vue';
@@ -245,7 +243,7 @@ export default {
     registerSuccess(newValue) {
       if (newValue) {
         window.location.reload();
-      };
+      }
     }
   },
 };
@@ -257,6 +255,14 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  height: 100vh;
+}
+
+.container button {
+  margin: 0.5rem;
+  display: flex;
+  align-items: center;
+  margin: 0 auto -2em auto;
 }
 
 .chatbox {
@@ -330,15 +336,6 @@ export default {
   cursor: pointer;
 }
 
-.login-button {
-  padding: 0.5rem 1rem;
-  background-color: #0045c4;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
 .login-form {
   display: flex;
   flex-direction: column;
@@ -390,7 +387,7 @@ export default {
   }
 
   .search-bar input[type="text"] {
-    width: 53.5vw;
+    //width: 53.5vw;
   }
 }
 </style>
